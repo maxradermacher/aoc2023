@@ -160,16 +160,13 @@ fn main() {
             }
         }
     }
-    let mut counts: Vec<(usize, usize)> = Vec::new();
-    for _ in 0..1000 {
-        let mut low_count: usize = 0;
-        let mut high_count: usize = 0;
+    for button_press in 0..100000 {
         let mut pulses: VecDeque<(&str, Pulse, &str)> = VecDeque::new();
         pulses.push_back(("", Pulse::Low, ""));
         while let Some((source, pulse, destination)) = pulses.pop_front() {
-            match pulse {
-                Pulse::Low => low_count += 1,
-                Pulse::High => high_count += 1,
+            if destination == "rx" && matches!(pulse, Pulse::Low) {
+                println!("dst matches! {:?} {}", pulse, button_press);
+                break;
             }
             let module = match modules.get_mut(destination) {
                 None => continue,
@@ -185,21 +182,5 @@ fn main() {
                 },
             }
         }
-        counts.push((low_count, high_count));
-        if modules.values().all(|module| module.is_default()) {
-            break;
-        }
     }
-    let mut low_count_total = 0;
-    let mut high_count_total = 0;
-    let full_iterations = ITERATIONS / counts.len();
-    for &(low_count, high_count) in &counts {
-        low_count_total += low_count * full_iterations;
-        high_count_total += high_count * full_iterations;
-    }
-    for &(low_count, high_count) in &counts[..(ITERATIONS % counts.len())] {
-        low_count_total += low_count;
-        high_count_total += high_count;
-    }
-    println!("{}", low_count_total * high_count_total);
 }
